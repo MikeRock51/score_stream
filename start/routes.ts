@@ -17,3 +17,5 @@ router.get('/', async () => {
 })
 
 router.post('tweet', [TweetsController, 'tweetTest'])
+
+router.get('job', [TweetsController, 'jobTest'])

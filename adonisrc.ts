@@ -33,7 +33,7 @@ export default defineConfig({
     () => import('#providers/mongo_provider'),
     () => import('@adonisjs/redis/redis_provider'),
     () => import('#providers/app_provider'),
-    () => import('@rlanz/bull-queue/queue_provider')
+    () => import('@rlanz/bull-queue/queue_provider'),
   ],
 
   /*

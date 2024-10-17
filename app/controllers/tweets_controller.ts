@@ -1,8 +1,12 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import TwitterClient from '../Clients/twitter_client.js'
+import MatchService from '#services/match_service'
 
 export default class TweetsController {
-  constructor(private twitterClient = TwitterClient) {}
+  constructor(
+    private twitterClient = TwitterClient,
+    private matchService = MatchService
+  ) {}
 
   public async tweetTest({ response }: HttpContext) {
     try {
@@ -19,5 +23,14 @@ export default class TweetsController {
         message: error.message,
       })
     }
+  }
+
+  public async jobTest({ response }: HttpContext) {
+    this.matchService.testJob()
+
+    response.status(200).send({
+      status: true,
+      message: 'Job queued successfully!',
+    })
   }
 }
