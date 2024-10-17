@@ -1,40 +1,28 @@
 import MatchService from '#services/match_service'
 import { Job } from '@rlanz/bull-queue'
 
-type MatchServiceMethods = keyof typeof MatchService
-
-export interface MatchJobPayload<T extends MatchServiceMethods> {
-  method: T
-  args: Parameters<(typeof MatchService)[T]>
+interface MatchJobPayload {
+  method: string
+  // message: string
 }
 
 export default class MatchJob extends Job {
-  constructor(
-    public job: Job,
-    private matchService = MatchService
-  ) {
-    super()
-  }
-
+  // This is the path to the file that is used to create the job
   static get $$filepath() {
     return import.meta.url
   }
 
-  async handle<T extends MatchServiceMethods>(payload: MatchJobPayload<T>) {
-    const { method, args } = payload
-    const job = this.job
-    try {
-      this.logger.info(`${job.getId()} - Job Match.${method} started`)
-      await (this.matchService[method] as Function)(...args)
-      this.logger.info(`${job.getId()} - Job Match.${method} ended`)
-    } catch (error: any) {
-      this.logger.error(`${job.getId()} - Job Match.${method} error`)
-      error.message = `${job.getId()} - Job Match.${method} error with ${args} ` + error.message
-      console.error(error)
-    }
+  matchService = MatchService
+
+  /**
+   * Base Entry point
+   */
+  async handle(payload: MatchJobPayload) {
+    ;((await this.matchService) as any)[payload.method]()
   }
 
-  async rescue<T extends MatchServiceMethods>(payload: MatchJobPayload<T>) {}
+  /**
+   * This is an optional method that gets called when the retries has exceeded and is marked failed.
+   */
+  async rescue(payload: MatchJobPayload) {}
 }
-
-export const MatchJobKey = '#app/job/match_job'

@@ -1,5 +1,5 @@
 import queue from '@rlanz/bull-queue/services/main'
-import MatchJob, { MatchJobKey } from '../jobs/match_job.js'
+import MatchJob from '../jobs/match_job.js'
 
 class MatchServiceClass {
   constructor() {}
@@ -22,14 +22,7 @@ class MatchServiceClass {
   }
 
   public testJob() {
-    queue.dispatch(
-      MatchJobKey,
-      {
-        method: this.testJob.name,
-        args: ['Running, running, running!'],
-      },
-      { priority: 1 }
-    )
+    console.log('Testing the job')
   }
 
   public testTheJob(info: string) {
