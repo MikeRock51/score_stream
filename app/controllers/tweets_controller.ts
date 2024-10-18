@@ -34,6 +34,7 @@ export default class TweetsController {
       MatchJob,
       {
         method: this.matchService.testJob.name,
+        args: [],
       }
       // { priority: 1 }
     )

@@ -3,6 +3,7 @@ import { Job } from '@rlanz/bull-queue'
 
 interface MatchJobPayload {
   method: string
+  args: any[]
   // message: string
 }
 
@@ -18,7 +19,12 @@ export default class MatchJob extends Job {
    * Base Entry point
    */
   async handle(payload: MatchJobPayload) {
-    ;((await this.matchService) as any)[payload.method]()
+    try {
+      const method = this.matchService[payload.method as keyof typeof this.matchService] as Function
+      await method(...payload.args)
+    } catch (error) {
+      console.error(error)
+    }
   }
 
   /**
