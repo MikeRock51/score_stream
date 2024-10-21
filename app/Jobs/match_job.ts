@@ -1,4 +1,4 @@
-import MatchService from '#services/match_service'
+import MatchService from '../Services/match_service.js'
 import { Job } from '@rlanz/bull-queue'
 
 interface MatchJobPayload {

@@ -8,7 +8,7 @@
 */
 
 import router from '@adonisjs/core/services/router'
-const TweetsController = () => import('#controllers/tweets_controller')
+const TweetsController = () => import('../app/Controllers/tweets_controller.js')
 
 router.get('/', async () => {
   return {
@@ -19,3 +19,5 @@ router.get('/', async () => {
 router.post('tweet', [TweetsController, 'tweetTest'])
 
 router.get('job', [TweetsController, 'jobTest'])
+
+router.patch('webSocket', [TweetsController, 'processWebsocketUpdate'])
