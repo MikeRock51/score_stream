@@ -2,11 +2,13 @@ import Queue from '@rlanz/bull-queue/services/main'
 import MatchJob from '../Jobs/match_job.js'
 import { QueryDB } from '../Clients/mongo_client.js'
 import TheSportsClient from '../Clients/the_sports_client.js'
+import TwitterClient from '../Clients/twitter_client.js'
 
 class MatchServiceClass {
   constructor(
     private queryDB = QueryDB,
-    private theSportsClient = TheSportsClient
+    private theSportsClient = TheSportsClient,
+    private twitterClient = TwitterClient
   ) {}
 
   public matchSelect = {
@@ -18,6 +20,7 @@ class MatchServiceClass {
     home_team_id: 1,
     away_team_id: 1,
     competition: 1,
+    competition_id: 1,
     season_id: 1,
     round: 1,
     streak: 1,
@@ -74,7 +77,14 @@ class MatchServiceClass {
 
     try {
       const dbMatch = await this.getMatchFromDB({ id })
-      if (!dbMatch) return
+      if (!dbMatch || dbMatch?.length < 1) return
+
+      // if (!this.theSportsClient.topCompetitions.includes(dbMatch.competition_id)) {
+      //   console.log('Not one of us. Moving on...')
+      //   return
+      // }
+
+      if (!dbMatch[0].home_team?.name || !dbMatch[0].away_team?.name) return
 
       // console.log(dbMatch)
 
@@ -83,50 +93,73 @@ class MatchServiceClass {
 
       console.log(updateData)
 
+      await this.twitterClient.v2.tweet(`${updateData.title} \n${updateData.body}`)
+
       // await this.updateMatchAndNotify(id, updateData, score)
     } catch (error) {
       console.error(`Error processing websocket data for ${id}`, error)
     }
   }
 
-  private prepareUpdateData(dbMatch: any, score: any[]): { set: any; notification: any } | null {
-    const set: any = {}
+  private prepareUpdateData(dbMatch: any, score: any[]) {
     let notification: any = null
 
     if (this.isStatusChanged(dbMatch, score)) {
       notification = this.handleStatusChange(dbMatch, score)
+    } else if (this.isScoreChanged(dbMatch, score)) {
+      notification = this.createScoreChangeNotification(dbMatch, score)
+    } else if (this.isRedCardChanged(dbMatch, score)) {
+      notification = this.createRedCardNotification(dbMatch, score)
+    } else {
+      return null
     }
-    // } else if (this.isScoreChanged(dbMatch, score)) {
-    //   notification = this.createScoreChangeNotification(dbMatch, score)
-    // } else if (this.isRedCardChanged(dbMatch, score)) {
-    //   notification = this.createRedCardNotification(dbMatch, score)
-    // } else {
-    //   return null
-    // }
 
-    // set.home_scores = score[2]
-    // set.away_scores = score[3]
-    // set.kickoff_timestamp = score[4]
-    // set.status_id = score[1]
-    // set.scoreUpdatedAt = Math.floor(Date.now() / 1000)
-
-    return { set, notification }
+    return notification
   }
 
   private isStatusChanged(dbMatch: any, score: any[]): boolean {
     return dbMatch.status_id !== score[1]
   }
 
+  private isScoreChanged(dbMatch: any, score: any[]): boolean {
+    const { homeScore, awayScore, dbHomeScore, dbAwayScore } = this.getScore(dbMatch, score)
+
+    return homeScore !== dbHomeScore || awayScore !== dbAwayScore
+  }
+
+  private getScore(dbMatch: any, score: any[]) {
+    const isPenaltyShootout = score[1] === 7
+    const isOvertime = score[1] === 5
+
+    const homeScore = isPenaltyShootout ? score[2][6] : isOvertime ? score[2][5] : score[2][0]
+    const awayScore = isPenaltyShootout ? score[3][6] : isOvertime ? score[3][5] : score[3][0]
+
+    const dbHomeScore = isPenaltyShootout
+      ? dbMatch.home_scores[6]
+      : isOvertime
+        ? dbMatch.home_scores[5]
+        : dbMatch.home_scores[0]
+
+    const dbAwayScore = isPenaltyShootout
+      ? dbMatch.away_scores[6]
+      : isOvertime
+        ? dbMatch.away_scores[5]
+        : dbMatch.away_scores[0]
+
+    return { homeScore, awayScore, dbHomeScore, dbAwayScore, isOvertime, isPenaltyShootout }
+  }
+
+  private isRedCardChanged(dbMatch: any, score: any[]): boolean {
+    return dbMatch.home_scores[2] !== score[2][2] || dbMatch.away_scores[2] !== score[3][2]
+  }
+
   private handleStatusChange(dbMatch: any, score: any[]) {
     if ([0, 1, 11, 13].includes(score[1])) return null
 
-    const isPenaltyShootout = score[1] === 7
+    const { homeScore, awayScore } = this.getScore(dbMatch, score)
 
-    const homeScore = isPenaltyShootout ? score[2][6] : score[2][0] + score[2][5]
-    const awayScore = isPenaltyShootout ? score[3][6] : score[3][0] + score[3][5]
-
-    const homeTeamName = dbMatch.home_team.name
-    const awayTeamName = dbMatch.away_team.name
+    const homeTeamName = dbMatch.home_team?.name
+    const awayTeamName = dbMatch.away_team?.name
 
     const title =
       this.theSportsClient.matchStatusEnum[
@@ -141,6 +174,52 @@ class MatchServiceClass {
     }
 
     return notification
+  }
+
+  private createScoreChangeNotification(dbMatch: any, score: any[]): any {
+    const { homeScore, awayScore, dbHomeScore, dbAwayScore, isPenaltyShootout } = this.getScore(
+      dbMatch,
+      score
+    )
+
+    const isHomeTeamScoreChange = dbHomeScore !== homeScore
+
+    const isScoreCorrection = isHomeTeamScoreChange
+      ? dbHomeScore > homeScore
+      : dbAwayScore > awayScore
+
+    const title = isScoreCorrection
+      ? `Score Correction${isPenaltyShootout ? ' (PEN)' : ''}`
+      : `Goal${isPenaltyShootout ? ' (PEN)' : ''}`
+
+    const homeTeamName = dbMatch.home_team.name
+    const awayTeamName = dbMatch.away_team.name
+
+    const body = `${homeTeamName} ${isHomeTeamScoreChange && !isScoreCorrection ? `[${homeScore}]` : homeScore} - ${isHomeTeamScoreChange || isScoreCorrection ? awayScore : `[${awayScore}]`} ${awayTeamName}`
+
+    return {
+      title,
+      body,
+      image: isHomeTeamScoreChange ? dbMatch.home_team?.logo : dbMatch.away_team?.logo,
+    }
+  }
+
+  private createRedCardNotification(dbMatch: any, score: any[]): any {
+    const isHomeTeamRedCard = dbMatch.home_scores[2] !== score[2][2]
+
+    const { homeScore, awayScore } = this.getScore(dbMatch, score)
+
+    const homeTeamName = dbMatch.home_team.name
+    const awayTeamName = dbMatch.away_team.name
+
+    const title = `Red Card (${isHomeTeamRedCard ? homeTeamName : awayTeamName})`
+    const body = `${homeTeamName} ${homeScore} - ${awayScore} ${awayTeamName}`
+
+    return {
+      title,
+      body,
+      image: isHomeTeamRedCard ? dbMatch.home_team?.logo : dbMatch.away_team?.logo,
+    }
   }
 }
 

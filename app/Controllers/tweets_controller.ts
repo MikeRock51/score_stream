@@ -37,7 +37,7 @@ export default class TweetsController {
     const payload: any = [
       {
         id: '965mkyhyygxlr1g',
-        score: ['965mkyhyygxlr1g', 4, [2, 0, 0, 0, 0, 1, 0], [6, 0, 3, 0, 0, 0, 0], 1728557865, ''],
+        score: ['965mkyhyygxlr1g', 7, [1, 0, 0, 0, 0, 2, 1], [1, 0, 1, 0, 0, 2, 2], 1728557865, ''],
       },
     ]
     await this.matchService.processWebsocketUpdate(payload)

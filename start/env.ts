@@ -32,4 +32,15 @@ export default await Env.create(new URL('../', import.meta.url), {
   QUEUE_REDIS_HOST: Env.schema.string({ format: 'host' }),
   QUEUE_REDIS_PORT: Env.schema.number(),
   QUEUE_REDIS_PASSWORD: Env.schema.string.optional(),
+
+  /*
+  |----------------------------------------------------------
+  | Websocket Variables
+  |----------------------------------------------------------
+  */
+  THESPORTSBASEURL: Env.schema.string(),
+  THESPORTSUSER: Env.schema.string(),
+  THESPORTSSECRET: Env.schema.string(),
+  THESPORTSWEBSOCKETURL: Env.schema.string(),
+  WEBSOCKETTOPIC: Env.schema.string(),
 })
