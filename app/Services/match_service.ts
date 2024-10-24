@@ -79,10 +79,10 @@ class MatchServiceClass {
       const dbMatch = await this.getMatchFromDB({ id })
       if (!dbMatch || dbMatch?.length < 1) return
 
-      // if (!this.theSportsClient.topCompetitions.includes(dbMatch.competition_id)) {
-      //   console.log('Not one of us. Moving on...')
-      //   return
-      // }
+      if (!this.theSportsClient.topCompetitions.includes(dbMatch[0].competition_id)) {
+        console.log('Not one of us. Moving on...')
+        return
+      }
 
       if (!dbMatch[0].home_team?.name || !dbMatch[0].away_team?.name) return
 
