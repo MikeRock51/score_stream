@@ -79,15 +79,15 @@ class TheSportsClient {
 
   public matchStatusEnum = {
     1: 'Not Started',
-    2: 'Match Started',
-    3: 'Half Time',
-    4: 'Second Half Started',
-    5: 'Extra Time Started',
-    7: 'Penalty Shootout Started',
-    8: 'Match Ended',
-    9: 'Match Delayed',
-    10: 'Match Interrupted',
-    12: 'Match Canceled',
+    2: 'Kick Off! 👟⚽ (Match has Started)',
+    3: 'Half Time 💆🏼‍♂️🧊',
+    4: 'Second Half Started 👟⚽',
+    5: 'Extra Time Started 👟⚽',
+    7: 'Penalty Shootout Started 🥅🎯',
+    8: 'Final Whistle 😮‍💨📢 (Match has Ended)',
+    9: 'Match Delayed 🚩',
+    10: 'Match Interrupted ⁉️',
+    12: 'Match Canceled ❌',
   }
 
   //   public async getDataFromApi(

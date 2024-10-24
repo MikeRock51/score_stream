@@ -118,7 +118,7 @@ class MatchServiceClass {
   }
 
   private isStatusChanged(dbMatch: any, score: any[]): boolean {
-    return dbMatch.status_id !== score[1]
+    return dbMatch.status_id !== score[1] && score[1] > dbMatch.status_id
   }
 
   private isScoreChanged(dbMatch: any, score: any[]): boolean {
@@ -189,8 +189,8 @@ class MatchServiceClass {
       : dbAwayScore > awayScore
 
     const title = isScoreCorrection
-      ? `Score Correction${isPenaltyShootout ? ' (PEN)' : ''}`
-      : `Goal${isPenaltyShootout ? ' (PEN)' : ''}`
+      ? `Score Correction${isPenaltyShootout ? ' (PENALTY SHOOTOUT)' : ''}`
+      : `Goal${isPenaltyShootout ? ' (PENALTY SHOOTOUT) 🥅🎯' : '🥅⚽'}`
 
     const homeTeamName = dbMatch.home_team.name
     const awayTeamName = dbMatch.away_team.name
@@ -212,7 +212,7 @@ class MatchServiceClass {
     const homeTeamName = dbMatch.home_team.name
     const awayTeamName = dbMatch.away_team.name
 
-    const title = `Red Card (${isHomeTeamRedCard ? homeTeamName : awayTeamName})`
+    const title = `Red Card (${isHomeTeamRedCard ? homeTeamName : awayTeamName}) 🟥`
     const body = `${homeTeamName} ${homeScore} - ${awayScore} ${awayTeamName}`
 
     return {
