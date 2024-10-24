@@ -1,8 +1,6 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import TwitterClient from '../Clients/twitter_client.js'
 import MatchService from '../Services/match_service.js'
-import Queue from '@rlanz/bull-queue/services/main'
-import MatchJob from '../Jobs/match_job.js'
 import Env from '#start/env'
 
 export default class TweetsController {
