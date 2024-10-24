@@ -26,9 +26,10 @@ export default class WebsocketProvider {
   }
 
   private isMainAppProcess(): boolean {
-    // const runningProcess = process.argv[1].split('/').at(-1)
-    // return runningProcess !== 'ace' && process.env.NODE_ENV !== 'development'
-    return true
+    const runningProcess = process.argv[1].split('/').at(-1)
+    return runningProcess !== 'ace'
+    // && process.env.NODE_ENV !== 'development'
+    // return true
   }
 
   private async initializeWebsocket() {

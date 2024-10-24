@@ -1,5 +1,5 @@
-// import Queue from '@rlanz/bull-queue/services/main'
-// import MatchJob from '../Jobs/match_job.js'
+import Queue from '@rlanz/bull-queue/services/main'
+import MatchJob from '../Jobs/match_job.js'
 import { QueryDB } from '../Clients/mongo_client.js'
 import TheSportsClient from '../Clients/the_sports_client.js'
 import TwitterClient from '../Clients/twitter_client.js'
@@ -7,7 +7,7 @@ import TwitterClient from '../Clients/twitter_client.js'
 class MatchServiceClass {
   constructor(
     private queryDB = QueryDB,
-    private theSportsClient = TheSportsClient,
+    // private theSportsClient = TheSportsClient,
     private twitterClient = TwitterClient
   ) {}
 
@@ -25,25 +25,18 @@ class MatchServiceClass {
     round: 1,
     streak: 1,
   }
-
-  public async getMatchFromDB(query: Record<string, any> = {}) {
-    const matches = await this.queryDB('matches', query, { select: this.matchSelect })
-
-    return matches
-  }
-
   public async processWebsocketUpdate(payload: any) {
     for (const data of payload) {
       if (data.score) {
-        // Queue.dispatch(
-        //   MatchJob,
-        //   {
-        //     method: this.processLiveScores.name,
-        //     args: [data],
-        //   },
-        //   { priority: 1 }
-        // )
-        await this.processLiveScores(data)
+        Queue.dispatch(
+          MatchJob,
+          {
+            method: this.processLiveScores.name,
+            args: [data],
+          },
+          { priority: 1 }
+        )
+        // await this.processLiveScores(data)
       }
 
       // if (data.stats) {
@@ -72,14 +65,40 @@ class MatchServiceClass {
     }
   }
 
+  public async getMatchFromDB(query: Record<string, any> = {}) {
+    const matches = await this.queryDB('matches', query, { select: this.matchSelect })
+
+    return matches
+  }
+
   public async processLiveScores(data: { id: string; score: any[] }): Promise<void> {
     const { id, score } = data
 
     try {
-      const dbMatch = await this.getMatchFromDB({ id })
+      // const dbMatch = await this.getMatchFromDB({ id })
+      const dbMatch = await QueryDB(
+        'matches',
+        { id },
+        {
+          select: {
+            home_scores: 1,
+            away_scores: 1,
+            status_id: 1,
+            home_team: 1,
+            away_team: 1,
+            home_team_id: 1,
+            away_team_id: 1,
+            competition: 1,
+            competition_id: 1,
+            season_id: 1,
+            round: 1,
+            streak: 1,
+          },
+        }
+      )
       if (!dbMatch || dbMatch?.length < 1) return
 
-      if (!this.theSportsClient.topCompetitions.includes(dbMatch[0].competition_id)) {
+      if (!TheSportsClient.topCompetitions.includes(dbMatch[0].competition_id)) {
         console.log('Not one of us. Moving on...')
         return
       }
@@ -162,9 +181,7 @@ class MatchServiceClass {
     const awayTeamName = dbMatch.away_team?.name
 
     const title =
-      this.theSportsClient.matchStatusEnum[
-        score[1] as keyof typeof this.theSportsClient.matchStatusEnum
-      ]
+      TheSportsClient.matchStatusEnum[score[1] as keyof typeof TheSportsClient.matchStatusEnum]
     const body = `${homeTeamName} ${homeScore} - ${awayScore} ${awayTeamName}`
 
     const notification = {
