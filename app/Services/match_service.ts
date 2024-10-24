@@ -6,9 +6,9 @@ import TwitterClient from '../Clients/twitter_client.js'
 
 class MatchServiceClass {
   constructor(
-    private queryDB = QueryDB,
+    private queryDB = QueryDB
     // private theSportsClient = TheSportsClient,
-    private twitterClient = TwitterClient
+    // private twitterClient = TwitterClient
   ) {}
 
   public matchSelect = {
@@ -112,7 +112,7 @@ class MatchServiceClass {
 
       console.log(updateData)
 
-      await this.twitterClient.v2.tweet(`${updateData.title} \n${updateData.body}`)
+      await TwitterClient.v2.tweet(`${updateData.title} \n${updateData.body}`)
 
       // await this.updateMatchAndNotify(id, updateData, score)
     } catch (error) {
