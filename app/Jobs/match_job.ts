@@ -20,7 +20,9 @@ export default class MatchJob extends Job {
    */
   async handle(payload: MatchJobPayload) {
     try {
-      const method = this.matchService[payload.method as keyof typeof this.matchService] as Function
+      const method = (
+        this.matchService[payload.method as keyof typeof this.matchService] as Function
+      ).bind(this.matchService)
       await method(...payload.args)
     } catch (error) {
       console.error(error)

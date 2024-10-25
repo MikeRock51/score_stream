@@ -1,5 +1,5 @@
-// import Queue from '@rlanz/bull-queue/services/main'
-// import MatchJob from '../Jobs/match_job.js'
+import Queue from '@rlanz/bull-queue/services/main'
+import MatchJob from '../Jobs/match_job.js'
 import { QueryDB } from '../Clients/mongo_client.js'
 import TheSportsClient from '../Clients/the_sports_client.js'
 import TwitterClient from '../Clients/twitter_client.js'
@@ -35,15 +35,15 @@ class MatchServiceClass {
   public async processWebsocketUpdate(payload: any) {
     for (const data of payload) {
       if (data.score) {
-        // Queue.dispatch(
-        //   MatchJob,
-        //   {
-        //     method: this.processLiveScores.name,
-        //     args: [data],
-        //   },
-        //   { priority: 1 }
-        // )
-        await this.processLiveScores(data)
+        Queue.dispatch(
+          MatchJob,
+          {
+            method: this.processLiveScores.name,
+            args: [data],
+          },
+          { priority: 1 }
+        )
+        // await this.processLiveScores(data)
       }
 
       // if (data.stats) {
@@ -94,6 +94,9 @@ class MatchServiceClass {
       console.log(updateData)
 
       await this.twitterClient.v2.tweet(`${updateData.title} \n${updateData.body}`)
+      console.log(
+        `Tweet sent for match ${dbMatch[0].home_team?.name} - ${dbMatch[0].away_team?.name}`
+      )
 
       // await this.updateMatchAndNotify(id, updateData, score)
     } catch (error) {

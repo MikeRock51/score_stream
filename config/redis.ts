@@ -21,7 +21,7 @@ const redisConfig = defineConfig({
       port: env.get('REDIS_PORT'),
       username: env.get('REDIS_USERNAME', ''),
       password: env.get('REDIS_PASSWORD', ''),
-      tls: {},
+      tls: env.get('NODE_ENV') === 'production' ? {} : undefined,
       db: 0,
       keyPrefix: '',
       retryStrategy(times) {
