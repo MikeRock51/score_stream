@@ -242,8 +242,12 @@ class MatchServiceClass {
       for (const match of matches) {
         if (match.status_id >= 8) continue
 
-        await this.matchModel.create(match)
-        console.log(`Match ${match.id} created`)
+        try {
+          await this.matchModel.create(match)
+          console.log(`Match ${match.id} created`)
+        } catch (error) {
+          console.error('Error creating match:', error.message)
+        }
       }
     } catch (error) {
       console.error('Error pulling matches:', error.message)
