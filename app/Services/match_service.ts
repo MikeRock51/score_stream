@@ -1,14 +1,16 @@
 import Queue from '@rlanz/bull-queue/services/main'
 import MatchJob from '../Jobs/match_job.js'
 import { QueryDB } from '../Clients/mongo_client.js'
-import TheSportsClient from '../Clients/the_sports_client.js'
+import TheSportsClient, { ApiQueryParams } from '../Clients/the_sports_client.js'
 import TwitterClient from '../Clients/twitter_client.js'
+import { MatchModel } from '../Models/Match/match.js'
 
 class MatchServiceClass {
   constructor(
     private queryDB = QueryDB,
     private theSportsClient = TheSportsClient,
-    private twitterClient = TwitterClient
+    private twitterClient = TwitterClient,
+    public matchModel = MatchModel
   ) {}
 
   public matchSelect = {
@@ -37,27 +39,11 @@ class MatchServiceClass {
       if (data.score) {
         console.log('Processing live scores for', data.id)
 
-        const dbMatch = await this.getMatchFromDB({ id: data.id })
-
-        if (
-          !dbMatch ||
-          dbMatch?.length < 1 ||
-          !dbMatch[0].home_team?.name ||
-          !dbMatch[0].away_team?.name
-        ) {
-          return
-        }
-
-        if (!this.theSportsClient.topCompetitions.includes(dbMatch[0].competition_id)) {
-          console.log('Not one of us. Moving on...')
-          return
-        }
-
         Queue.dispatch(
           MatchJob,
           {
             method: this.processLiveScores.name,
-            args: [data, dbMatch[0]],
+            args: [data],
           }
           // { priority: 1 }
         )
@@ -90,10 +76,19 @@ class MatchServiceClass {
     }
   }
 
-  public async processLiveScores(data: { id: string; score: any[] }, dbMatch: any): Promise<void> {
+  public async processLiveScores(data: { id: string; score: any[] }): Promise<void> {
     const { id, score } = data
 
-    console.log(dbMatch, data)
+    const dbMatch = await this.matchModel.findOne({ id }).select(this.matchSelect)
+
+    if (!dbMatch || !dbMatch.home_team?.name || !dbMatch.away_team?.name) {
+      return
+    }
+
+    if (!this.theSportsClient.topCompetitions.includes(dbMatch.competition_id)) {
+      console.log('Not one of us. Moving on...')
+      return
+    }
 
     try {
       const updateData = this.prepareUpdateData(dbMatch, score)
@@ -102,7 +97,7 @@ class MatchServiceClass {
       // console.log(updateData)
 
       await this.twitterClient.v2.tweet(
-        `${updateData.title}\n\n${dbMatch.competition?.name}\n${updateData.body}`
+        `${updateData.title}\n\n${updateData.body}\n\n${dbMatch.competition?.name}`
       )
       console.log(`Tweet sent for match ${dbMatch.home_team?.name} - ${dbMatch.away_team?.name}`)
 
@@ -231,6 +226,29 @@ class MatchServiceClass {
       body,
       image: isHomeTeamRedCard ? dbMatch.home_team?.logo : dbMatch.away_team?.logo,
     }
+  }
+
+  public async pullMatchesFromAPIJob(query: ApiQueryParams = {}) {
+    Queue.dispatch(MatchJob, { method: this.pullMatchesFromAPI.name, args: [query] })
+  }
+
+  public async pullMatchesFromAPI(query: ApiQueryParams = {}) {
+    try {
+      const matches = await this.theSportsClient.getDataFromApi(
+        this.theSportsClient.endpoints.matches,
+        query
+      )
+
+      for (const match of matches) {
+        if (match.status_id >= 8) continue
+
+        await this.matchModel.create(match)
+        console.log(`Match ${match.id} created`)
+      }
+    } catch (error) {
+      console.error('Error pulling matches:', error.message)
+    }
+    console.log('done')
   }
 }
 

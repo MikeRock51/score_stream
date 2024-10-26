@@ -1,20 +1,27 @@
-// import axios, { AxiosInstance, AxiosResponse } from 'axios'
-// import 'dotenv/config'
-// import { ApiQueryParams } from './ServicesDto'
+import axios, { AxiosInstance, AxiosResponse } from 'axios'
+import 'dotenv/config'
+
+export type ApiQueryParams = {
+  page?: number
+  time?: number
+  uuid?: string
+  tsp?: number
+  date?: string
+}
 
 class TheSportsClient {
-  //   private axiosInstance: AxiosInstance
-  //   private baseUrl = process.env.THESPORTSBASEURL
-  //   private user = process.env.THESPORTSUSER
-  //   private secret = process.env.THESPORTSSECRET
+  private axiosInstance: AxiosInstance
+  private baseUrl = process.env.THESPORTSBASEURL
+  private user = process.env.THESPORTSUSER
+  private secret = process.env.THESPORTSSECRET
   constructor() {
-    // this.axiosInstance = axios.create({
-    //   baseURL: this.baseUrl,
-    //   params: {
-    //     user: this.user,
-    //     secret: this.secret,
-    //   },
-    // })
+    this.axiosInstance = axios.create({
+      baseURL: this.baseUrl,
+      params: {
+        user: this.user,
+        secret: this.secret,
+      },
+    })
   }
 
   public topCompetitions = [
@@ -90,46 +97,46 @@ class TheSportsClient {
     12: 'Match Canceled ❌',
   }
 
-  //   public async getDataFromApi(
-  //     endpoint: string,
-  //     query: ApiQueryParams = {},
-  //     returnQuery: boolean = false
-  //   ) {
-  //     const params = {
-  //       page: query.page || '',
-  //       time: query.time || '',
-  //       uuid: query.uuid || '',
-  //       tsp: query.tsp || '',
-  //       date: query.date || '',
-  //     }
-  //     return this.getRequest(endpoint, params, returnQuery)
-  //   }
+  public async getDataFromApi(
+    endpoint: string,
+    query: ApiQueryParams = {},
+    returnQuery: boolean = false
+  ) {
+    const params = {
+      page: query.page || '',
+      time: query.time || '',
+      uuid: query.uuid || '',
+      tsp: query.tsp || '',
+      date: query.date || '',
+    }
+    return this.getRequest(endpoint, params, returnQuery)
+  }
 
-  //   private async getRequest(
-  //     endpoint: string,
-  //     params: Record<string, any> = {},
-  //     returnQuery: boolean = false
-  //   ) {
-  //     try {
-  //       const response: AxiosResponse = await this.axiosInstance.get(endpoint, { params })
+  private async getRequest(
+    endpoint: string,
+    params: Record<string, any> = {},
+    returnQuery: boolean = false
+  ) {
+    try {
+      const response: AxiosResponse = await this.axiosInstance.get(endpoint, { params })
 
-  //       if (!response.data.results) {
-  //         throw new Error(response.data.err || response.data.msg)
-  //       }
+      if (!response.data.results) {
+        throw new Error(response.data.err || response.data.msg)
+      }
 
-  //       if (returnQuery) {
-  //         return response.data
-  //       }
+      if (returnQuery) {
+        return response.data
+      }
 
-  //       return response.data.results
-  //     } catch (error) {
-  //       if (axios.isAxiosError(error)) {
-  //         console.log(error.message)
-  //         throw new Error(`API request failed: ${error.message}`)
-  //       }
-  //       throw error
-  //     }
-  //   }
+      return response.data.results
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.log(error.message)
+        throw new Error(`API request failed: ${error.message}`)
+      }
+      throw error
+    }
+  }
 }
 
 export default new TheSportsClient()
