@@ -48,15 +48,20 @@ class MatchServiceClass {
           return
         }
 
-        Queue.dispatch(
-          MatchJob,
-          {
-            method: this.processLiveScores.name,
-            args: [data, dbMatch[0]],
-          }
-          // { priority: 1 }
-        )
-        // await this.processLiveScores(data)
+        if (!this.theSportsClient.topCompetitions.includes(dbMatch[0].competition_id)) {
+          console.log('Not one of us. Moving on...')
+          return
+        }
+
+        // Queue.dispatch(
+        //   MatchJob,
+        //   {
+        //     method: this.processLiveScores.name,
+        //     args: [data, dbMatch[0]],
+        //   }
+        //   // { priority: 1 }
+        // )
+        await this.processLiveScores(data, dbMatch[0])
       }
 
       // if (data.stats) {
@@ -91,11 +96,6 @@ class MatchServiceClass {
     console.log(dbMatch, data)
 
     try {
-      // if (!this.theSportsClient.topCompetitions.includes(dbMatch.competition_id)) {
-      //   console.log('Not one of us. Moving on...')
-      //   return
-      // }
-
       const updateData = this.prepareUpdateData(dbMatch, score)
       if (!updateData) return
 
