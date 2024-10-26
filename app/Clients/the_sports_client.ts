@@ -84,7 +84,7 @@ class TheSportsClient {
     4: 'Second Half Started 👟⚽',
     5: 'Extra Time Started 👟⚽',
     7: 'Penalty Shootout Started 🥅🎯',
-    8: 'Final Whistle 😮‍💨📢 (Match has Ended)',
+    8: 'Final Whistle (Match has Ended)',
     9: 'Match Delayed 🚩',
     10: 'Match Interrupted ⁉️',
     12: 'Match Canceled ❌',

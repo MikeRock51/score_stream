@@ -13,6 +13,8 @@ export default class MatchJob extends Job {
     return import.meta.url
   }
 
+  public queue = 'match'
+
   matchService = MatchService
 
   /**

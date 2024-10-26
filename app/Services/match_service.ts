@@ -35,13 +35,28 @@ class MatchServiceClass {
   public async processWebsocketUpdate(payload: any) {
     for (const data of payload) {
       if (data.score) {
+        console.log('Processing live scores for', data.id)
+
+        const dbMatch = await this.getMatchFromDB({ id: data.id })
+
+        if (
+          !dbMatch ||
+          dbMatch?.length < 1 ||
+          !dbMatch[0].home_team?.name ||
+          !dbMatch[0].away_team?.name
+        ) {
+          return
+        }
+
+        console.log(dbMatch, data)
+
         Queue.dispatch(
           MatchJob,
           {
             method: this.processLiveScores.name,
-            args: [data],
-          },
-          { priority: 1 }
+            args: [data, dbMatch[0]],
+          }
+          // { priority: 1 }
         )
         // await this.processLiveScores(data)
       }
@@ -72,31 +87,26 @@ class MatchServiceClass {
     }
   }
 
-  public async processLiveScores(data: { id: string; score: any[] }): Promise<void> {
+  public async processLiveScores(data: { id: string; score: any[] }, dbMatch: any): Promise<void> {
     const { id, score } = data
 
-    try {
-      const dbMatch = await this.getMatchFromDB({ id })
-      if (!dbMatch || dbMatch?.length < 1) return
+    // console.log(data)
 
+    try {
       if (!this.theSportsClient.topCompetitions.includes(dbMatch[0].competition_id)) {
         console.log('Not one of us. Moving on...')
         return
       }
 
-      if (!dbMatch[0].home_team?.name || !dbMatch[0].away_team?.name) return
-
-      // console.log(dbMatch)
-
-      const updateData = this.prepareUpdateData(dbMatch[0], score)
+      const updateData = this.prepareUpdateData(dbMatch, score)
       if (!updateData) return
 
-      console.log(updateData)
+      // console.log(updateData)
 
-      await this.twitterClient.v2.tweet(`${updateData.title} \n${updateData.body}`)
-      console.log(
-        `Tweet sent for match ${dbMatch[0].home_team?.name} - ${dbMatch[0].away_team?.name}`
+      await this.twitterClient.v2.tweet(
+        `${updateData.title}\n\n${dbMatch.competition?.name}\n\n${updateData.body}`
       )
+      console.log(`Tweet sent for match ${dbMatch.home_team?.name} - ${dbMatch.away_team?.name}`)
 
       // await this.updateMatchAndNotify(id, updateData, score)
     } catch (error) {

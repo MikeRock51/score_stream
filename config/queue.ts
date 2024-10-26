@@ -13,7 +13,7 @@ export default defineConfig({
   queue: {},
 
   worker: {
-    concurrency: 4,
+    concurrency: 12,
   },
 
   jobs: {
@@ -60,7 +60,7 @@ const workers = [
   },
   {
     name: 'default-worker',
-    concurrency: 2,
+    concurrency: 12,
     queues: ['default'],
   },
 ]
