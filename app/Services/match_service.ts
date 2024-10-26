@@ -48,8 +48,6 @@ class MatchServiceClass {
           return
         }
 
-        console.log(dbMatch, data)
-
         Queue.dispatch(
           MatchJob,
           {
@@ -90,7 +88,7 @@ class MatchServiceClass {
   public async processLiveScores(data: { id: string; score: any[] }, dbMatch: any): Promise<void> {
     const { id, score } = data
 
-    // console.log(data)
+    console.log(dbMatch, data)
 
     try {
       // if (!this.theSportsClient.topCompetitions.includes(dbMatch.competition_id)) {
