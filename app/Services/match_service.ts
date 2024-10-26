@@ -93,10 +93,10 @@ class MatchServiceClass {
     // console.log(data)
 
     try {
-      if (!this.theSportsClient.topCompetitions.includes(dbMatch[0].competition_id)) {
-        console.log('Not one of us. Moving on...')
-        return
-      }
+      // if (!this.theSportsClient.topCompetitions.includes(dbMatch.competition_id)) {
+      //   console.log('Not one of us. Moving on...')
+      //   return
+      // }
 
       const updateData = this.prepareUpdateData(dbMatch, score)
       if (!updateData) return
