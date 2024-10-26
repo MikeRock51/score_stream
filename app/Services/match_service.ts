@@ -48,10 +48,10 @@ class MatchServiceClass {
           return
         }
 
-        if (!this.theSportsClient.topCompetitions.includes(dbMatch[0].competition_id)) {
-          console.log('Not one of us. Moving on...')
-          return
-        }
+        // if (!this.theSportsClient.topCompetitions.includes(dbMatch[0].competition_id)) {
+        //   console.log('Not one of us. Moving on...')
+        //   return
+        // }
 
         Queue.dispatch(
           MatchJob,
