@@ -48,10 +48,10 @@ class MatchServiceClass {
           return
         }
 
-        // if (!this.theSportsClient.topCompetitions.includes(dbMatch[0].competition_id)) {
-        //   console.log('Not one of us. Moving on...')
-        //   return
-        // }
+        if (!this.theSportsClient.topCompetitions.includes(dbMatch[0].competition_id)) {
+          console.log('Not one of us. Moving on...')
+          return
+        }
 
         Queue.dispatch(
           MatchJob,
@@ -102,7 +102,7 @@ class MatchServiceClass {
       // console.log(updateData)
 
       await this.twitterClient.v2.tweet(
-        `${updateData.title}\n\n${dbMatch.competition?.name}\n\n${updateData.body}`
+        `${updateData.title}\n\n${dbMatch.competition?.name}\n${updateData.body}`
       )
       console.log(`Tweet sent for match ${dbMatch.home_team?.name} - ${dbMatch.away_team?.name}`)
 
