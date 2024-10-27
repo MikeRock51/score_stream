@@ -28,6 +28,7 @@ router.patch('webSocket', [TweetsController, 'processWebsocketUpdate'])
 router
   .group(() => {
     router.post('/data/pull', [MatchesController, 'pullMatchesFromAPI'])
+    router.post('/data/pull/byDate', [MatchesController, 'pullMatchesByDate'])
   })
   .prefix('matches')
 

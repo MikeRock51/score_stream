@@ -20,4 +20,22 @@ export default class MatchesController {
       return response.status(500).json({ message: error.message })
     }
   }
+
+  public async pullMatchesByDate({ request, response }: HttpContext) {
+    const query = request.qs()
+
+    try {
+      await this.matchService.pullMatchesByDateJob(query)
+
+      return response.status(200).json({
+        status: 'success',
+        message: 'Matches pulled successfully',
+      })
+    } catch (error) {
+      return response.status(500).json({
+        status: 'failed',
+        message: error.message,
+      })
+    }
+  }
 }

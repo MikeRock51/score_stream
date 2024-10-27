@@ -4,6 +4,9 @@ import { QueryDB } from '../Clients/mongo_client.js'
 import TheSportsClient, { ApiQueryParams } from '../Clients/the_sports_client.js'
 import TwitterClient from '../Clients/twitter_client.js'
 import { MatchModel } from '../Models/Match/match.js'
+import axios from 'axios'
+import Env from '#start/env'
+import { formatDate } from '../Models/Match/MatchHelpers/misc.js'
 
 class MatchServiceClass {
   constructor(
@@ -14,6 +17,7 @@ class MatchServiceClass {
   ) {}
 
   public matchSelect = {
+    id: 1,
     home_scores: 1,
     away_scores: 1,
     status_id: 1,
@@ -24,8 +28,6 @@ class MatchServiceClass {
     competition: 1,
     competition_id: 1,
     season_id: 1,
-    round: 1,
-    streak: 1,
   }
 
   public async getMatchFromDB(query: Record<string, any> = {}) {
@@ -96,9 +98,13 @@ class MatchServiceClass {
 
       // console.log(updateData)
 
-      await this.twitterClient.v2.tweet(
-        `${updateData.title}\n\n${updateData.body}\n\n${dbMatch.competition?.name}`
-      )
+      await Promise.all([
+        this.matchModel.updateOne({ id }, { $set: updateData.set }),
+        this.twitterClient.v2.tweet(
+          `${updateData.notification?.title}\n\n${updateData.notification?.body}\n\n${dbMatch.competition?.name}`
+        ),
+      ])
+
       console.log(`Tweet sent for match ${dbMatch.home_team?.name} - ${dbMatch.away_team?.name}`)
 
       // await this.updateMatchAndNotify(id, updateData, score)
@@ -107,8 +113,9 @@ class MatchServiceClass {
     }
   }
 
-  private prepareUpdateData(dbMatch: any, score: any[]) {
+  private prepareUpdateData(dbMatch: any, score: any[]): { set: any; notification: any } | null {
     let notification: any = null
+    const set: any = {}
 
     if (this.isStatusChanged(dbMatch, score)) {
       notification = this.handleStatusChange(dbMatch, score)
@@ -120,7 +127,13 @@ class MatchServiceClass {
       return null
     }
 
-    return notification
+    set.home_scores = score[2]
+    set.away_scores = score[3]
+    set.kickoff_timestamp = score[4]
+    set.status_id = score[1]
+    set.scoreUpdatedAt = Math.floor(Date.now() / 1000)
+
+    return { set, notification }
   }
 
   private isStatusChanged(dbMatch: any, score: any[]): boolean {
@@ -240,7 +253,11 @@ class MatchServiceClass {
       )
 
       for (const match of matches) {
-        if (match.status_id >= 8) continue
+        if (
+          match.status_id >= 8 ||
+          !this.theSportsClient.topCompetitions.includes(match.competition_id)
+        )
+          continue
 
         try {
           await this.matchModel.create(match)
@@ -251,6 +268,44 @@ class MatchServiceClass {
       }
     } catch (error) {
       console.error('Error pulling matches:', error.message)
+    }
+    console.log('done')
+  }
+
+  public async pullMatchesByDateJob(query: Record<string, any> = {}) {
+    Queue.dispatch(MatchJob, { method: this.pullMatchesByDate.name, args: [query] })
+  }
+
+  public async pullMatchesByDate(query: Record<string, any> = {}) {
+    try {
+      let date
+
+      if (query.date) {
+        date = query.date
+      } else {
+        const today = new Date()
+        date = formatDate(today)
+      }
+      const response = await axios.get(`${Env.get('SPOTIPBASEURL')}/v1/matches/date/${date}`)
+      const matches = response.data.data.matches
+
+      for (const match of matches) {
+        if (
+          match.status_id >= 8 ||
+          !this.theSportsClient.topCompetitions.includes(match.competition_id)
+        )
+          continue
+
+        try {
+          await this.matchModel.create(match)
+          console.log(`Match ${match.id} created`)
+        } catch (error) {
+          console.error('Error creating match:', error.message)
+        }
+      }
+    } catch (error) {
+      console.error('Error pulling matches:', error.message)
+      throw new Error(`Error pulling matches: ${error.message}`)
     }
     console.log('done')
   }
