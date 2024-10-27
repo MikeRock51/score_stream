@@ -98,12 +98,16 @@ class MatchServiceClass {
 
       // console.log(updateData)
 
-      await Promise.all([
-        this.matchModel.updateOne({ id }, { $set: updateData.set }),
-        this.twitterClient.v2.tweet(
-          `${updateData.notification?.title}\n\n${updateData.notification?.body}\n\n${dbMatch.competition?.name}`
-        ),
-      ])
+      const promises: any[] = [this.matchModel.updateOne({ id }, { $set: updateData.set })]
+
+      if (updateData.notification)
+        promises.push(
+          this.twitterClient.v2.tweet(
+            `${updateData.notification?.title}\n\n${updateData.notification?.body}\n\n🏆 ${dbMatch.competition?.name}`
+          )
+        )
+
+      await Promise.all(promises)
 
       console.log(`Tweet sent for match ${dbMatch.home_team?.name} - ${dbMatch.away_team?.name}`)
 
@@ -173,7 +177,7 @@ class MatchServiceClass {
   }
 
   private handleStatusChange(dbMatch: any, score: any[]) {
-    if ([0, 1, 11, 13].includes(score[1])) return null
+    if ([0, 1, 11, 13, 3, 4, 8].includes(score[1])) return null
 
     const { homeScore, awayScore } = this.getScore(dbMatch, score)
 
@@ -184,7 +188,7 @@ class MatchServiceClass {
       this.theSportsClient.matchStatusEnum[
         score[1] as keyof typeof this.theSportsClient.matchStatusEnum
       ]
-    const body = `${homeTeamName} ${homeScore} - ${awayScore} ${awayTeamName}`
+    const body = `⚔️ ${homeTeamName} ${homeScore} - ${awayScore} ${awayTeamName}`
 
     const notification = {
       title,
@@ -214,7 +218,7 @@ class MatchServiceClass {
     const homeTeamName = dbMatch.home_team.name
     const awayTeamName = dbMatch.away_team.name
 
-    const body = `${homeTeamName} ${isHomeTeamScoreChange && !isScoreCorrection ? `[${homeScore}]` : homeScore} - ${isHomeTeamScoreChange || isScoreCorrection ? awayScore : `[${awayScore}]`} ${awayTeamName}`
+    const body = `⚔️ ${homeTeamName} ${isHomeTeamScoreChange && !isScoreCorrection ? `[${homeScore}]` : homeScore} - ${isHomeTeamScoreChange || isScoreCorrection ? awayScore : `[${awayScore}]`} ${awayTeamName}`
 
     return {
       title,
@@ -232,7 +236,7 @@ class MatchServiceClass {
     const awayTeamName = dbMatch.away_team.name
 
     const title = `Red Card (${isHomeTeamRedCard ? homeTeamName : awayTeamName}) 🟥`
-    const body = `${homeTeamName} ${homeScore} - ${awayScore} ${awayTeamName}`
+    const body = `⚔️ ${homeTeamName} ${homeScore} - ${awayScore} ${awayTeamName}`
 
     return {
       title,
