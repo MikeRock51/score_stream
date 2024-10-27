@@ -29,20 +29,21 @@ class TheSportsClient {
     'vl7oqdehlyr510j', // La Liga
     'jednm9whz0ryox8', // EPL
     'd23xmvkh43oqg8n', // Nations League
-    // 'gy0or5jhg6qwzv3', // Bundesliga
+    'gy0or5jhg6qwzv3', // Bundesliga
     '4zp5rzghp5q82w1', // Serie A
     'yl5ergphnzr8k0o', // Ligue 1
-    // 'kn54qllhg2qvy9d', // MLS
-    // 'j1l4rjnh66nm7vx', // Saudi Pro
-    // 'vl7oqdeheyr510j', // Eredivise
+    'kn54qllhg2qvy9d', // MLS
+    'j1l4rjnh66nm7vx', // Saudi Pro
+    'vl7oqdeheyr510j', // Eredivise
     '56ypq3nh0xmd7oj', // Europa League
-    // 'gpxwrxlhzzryk0j', // Copa Del Rey
-    // 'kdj2ryoh9eq1zpg', // Copa America
-    // 'v2y8m4zh3kql074', // Euros
-    // 'l965mkyhn0r1ge4', // DFB Pokal
-    // '9k82rekho4repzj', // Coppa Italia
-    // '56ypq3nh1wmd7oj', // Coupe de France
+    'gpxwrxlhzzryk0j', // Copa Del Rey
+    'kdj2ryoh9eq1zpg', // Copa America
+    'v2y8m4zh3kql074', // Euros
+    'l965mkyhn0r1ge4', // DFB Pokal
+    '9k82rekho4repzj', // Coppa Italia
+    '56ypq3nh1wmd7oj', // Coupe de France
     'z8yomo4h70vq0j6', // AFCON
+    '9vjxm8ghx2r6odg', //Portuguese Primera Liga
   ]
 
   public endpoints = {

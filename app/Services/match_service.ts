@@ -290,8 +290,12 @@ class MatchServiceClass {
         const today = new Date()
         date = formatDate(today)
       }
+
+      console.log(date)
       const response = await axios.get(`${Env.get('SPOTIPBASEURL')}/v1/matches/date/${date}`)
       const matches = response.data.data.matches
+
+      console.log(`Found ${matches.length} matches for ${date}`)
 
       for (const match of matches) {
         if (
@@ -301,6 +305,7 @@ class MatchServiceClass {
           continue
 
         try {
+          console.log(`Processing match ${match.id}`)
           await this.matchModel.create(match)
           console.log(`Match ${match.id} created`)
         } catch (error) {
