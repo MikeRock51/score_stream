@@ -43,7 +43,8 @@ class TheSportsClient {
     '9k82rekho4repzj', // Coppa Italia
     '56ypq3nh1wmd7oj', // Coupe de France
     'z8yomo4h70vq0j6', // AFCON
-    '9vjxm8ghx2r6odg', //Portuguese Primera Liga
+    '9vjxm8ghx2r6odg', // Portuguese Primera Liga
+    'gx7lm7phw0m2wdk', // Carabao Cup
   ]
 
   public endpoints = {
