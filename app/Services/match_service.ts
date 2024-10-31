@@ -151,8 +151,8 @@ class MatchServiceClass {
   }
 
   private getScore(dbMatch: any, score: any[]) {
-    const isPenaltyShootout = score[1] === 7
-    const isOvertime = score[1] === 5
+    const isPenaltyShootout = score[1] === 7 || dbMatch.status_id === 7
+    const isOvertime = score[1] === 5 || dbMatch.status_id === 5
 
     const homeScore = isPenaltyShootout ? score[2][6] : isOvertime ? score[2][5] : score[2][0]
     const awayScore = isPenaltyShootout ? score[3][6] : isOvertime ? score[3][5] : score[3][0]
